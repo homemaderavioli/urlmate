@@ -1,4 +1,4 @@
-module gitlab.com/urlmate/url
+module github.com/ravelford/urlmate
 
 go 1.14
 
