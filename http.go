@@ -24,7 +24,7 @@ func createNewURL(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	rc := RiakStorageClient{
+	rc := RiakClient{
 		IP:             "localhost",
 		ShortURLBucket: "short_urls",
 	}
@@ -39,7 +39,7 @@ func createNewURL(c *gin.Context) {
 func redirectURL(c *gin.Context) {
 	urlKey := c.Param("action")[1:]
 
-	rc := RiakStorageClient{
+	rc := RiakClient{
 		IP:             "localhost",
 		ShortURLBucket: "short_urls",
 	}

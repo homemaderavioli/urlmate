@@ -7,15 +7,15 @@ import (
 	riak "github.com/basho/riak-go-client"
 )
 
-// RiakStorageClient structure
-type RiakStorageClient struct {
+// RiakClient structure
+type RiakClient struct {
 	IP             string
 	ShortURLBucket string
 }
 
 // CreateURL riak api
-func (rsc RiakStorageClient) CreateURL(key string, value []byte) (string, error) {
-	data, err := rsc.createObject(rsc.ShortURLBucket, key, value)
+func (rc RiakClient) CreateURL(key string, value []byte) (string, error) {
+	data, err := rc.createObject(rc.ShortURLBucket, key, value)
 	if err != nil {
 		return "", err
 	}
@@ -23,19 +23,19 @@ func (rsc RiakStorageClient) CreateURL(key string, value []byte) (string, error)
 }
 
 // GetURL riak api
-func (rsc RiakStorageClient) GetURL(key string) ([]byte, error) {
-	data, err := rsc.getObject(rsc.ShortURLBucket, key)
+func (rc RiakClient) GetURL(key string) ([]byte, error) {
+	data, err := rc.getObject(rc.ShortURLBucket, key)
 	if err != nil {
 		return nil, err
 	}
 	return data.Value, nil
 }
 
-func (rsc RiakStorageClient) client() *riak.Client {
+func (rc RiakClient) client() *riak.Client {
 	var err error
 
 	o := &riak.NewClientOptions{
-		RemoteAddresses: []string{rsc.IP},
+		RemoteAddresses: []string{rc.IP},
 	}
 
 	var c *riak.Client
@@ -47,8 +47,8 @@ func (rsc RiakStorageClient) client() *riak.Client {
 	return c
 }
 
-func (rsc RiakStorageClient) createObject(bucket string, key string, value []byte) (*riak.Object, error) {
-	c := rsc.client()
+func (rc RiakClient) createObject(bucket string, key string, value []byte) (*riak.Object, error) {
+	c := rc.client()
 	if c == nil {
 		return nil, errors.New("no client")
 	}
@@ -82,8 +82,8 @@ func (rsc RiakStorageClient) createObject(bucket string, key string, value []byt
 	return scmd.Response.Values[0], nil
 }
 
-func (rsc RiakStorageClient) getObject(bucket string, key string) (*riak.Object, error) {
-	c := rsc.client()
+func (rc RiakClient) getObject(bucket string, key string) (*riak.Object, error) {
+	c := rc.client()
 	if c == nil {
 		return nil, errors.New("no client")
 	}
