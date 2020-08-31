@@ -7,7 +7,7 @@ import (
 
 type StubStorage struct {
 	Key string
-	URL []byte
+	url []byte
 }
 
 func (sc StubStorage) CreateURL(key string, value []byte) (string, error) {
@@ -15,7 +15,7 @@ func (sc StubStorage) CreateURL(key string, value []byte) (string, error) {
 }
 
 func (sc StubStorage) GetURL(key string) ([]byte, error) {
-	return sc.URL, nil
+	return sc.url, nil
 }
 
 func TestSaveURL(t *testing.T) {
@@ -34,14 +34,14 @@ func TestSaveURL(t *testing.T) {
 
 func TestFindURL(t *testing.T) {
 	expectedURL := "https://www.google.com"
-	var urlData = &URL{
+	var urlData = &url{
 		OriginalURL:    expectedURL,
 		CreationDate:   "",
 		ExpirationDate: "",
 	}
 	data, _ := json.Marshal(urlData)
 	sc := StubStorage{
-		URL: data,
+		url: data,
 	}
 
 	url, err := FindURL(sc, "dGVzdA")

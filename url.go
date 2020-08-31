@@ -7,17 +7,17 @@ import (
 	"time"
 )
 
-// URL is the structure to hold information about a shorten url
-type URL struct {
+// Storage is the interface url data
+type Storage interface {
+	CreateURL(key string, value []byte) (string, error)
+	GetURL(key string) ([]byte, error)
+}
+
+// url is the structure to hold information about a shorten url
+type url struct {
 	OriginalURL    string
 	CreationDate   string
 	ExpirationDate string
-}
-
-// URLStorage interface
-type URLStorage interface {
-	CreateURL(key string, value []byte) (string, error)
-	GetURL(key string) ([]byte, error)
 }
 
 const (
@@ -25,10 +25,10 @@ const (
 )
 
 // SaveURL api
-func SaveURL(sc URLStorage, originalURL string) (string, error) {
+func SaveURL(sc Storage, originalURL string) (string, error) {
 	creationDate := time.Now()
 	expirationDate := creationDate.Add(time.Hour * twoYears)
-	var url = &URL{
+	var url = &url{
 		OriginalURL:    originalURL,
 		CreationDate:   creationDate.String(),
 		ExpirationDate: expirationDate.String(),
@@ -47,12 +47,12 @@ func SaveURL(sc URLStorage, originalURL string) (string, error) {
 }
 
 // FindURL api
-func FindURL(sc URLStorage, urlKey string) (string, error) {
+func FindURL(sc Storage, urlKey string) (string, error) {
 	rawURL, err := sc.GetURL(urlKey)
 	if err != nil {
 		return "", err
 	}
-	var url = &URL{}
+	var url = &url{}
 	err = json.Unmarshal(rawURL, url)
 	if err != nil {
 		return "", err

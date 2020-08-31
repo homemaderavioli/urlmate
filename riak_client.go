@@ -14,7 +14,7 @@ type RiakClient struct {
 }
 
 // CreateURL riak api
-func (rc RiakClient) CreateURL(key string, value []byte) (string, error) {
+func (rc *RiakClient) CreateURL(key string, value []byte) (string, error) {
 	data, err := rc.createObject(rc.ShortURLBucket, key, value)
 	if err != nil {
 		return "", err
@@ -23,7 +23,7 @@ func (rc RiakClient) CreateURL(key string, value []byte) (string, error) {
 }
 
 // GetURL riak api
-func (rc RiakClient) GetURL(key string) ([]byte, error) {
+func (rc *RiakClient) GetURL(key string) ([]byte, error) {
 	data, err := rc.getObject(rc.ShortURLBucket, key)
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (rc RiakClient) GetURL(key string) ([]byte, error) {
 	return data.Value, nil
 }
 
-func (rc RiakClient) client() *riak.Client {
+func (rc *RiakClient) client() *riak.Client {
 	var err error
 
 	o := &riak.NewClientOptions{
@@ -47,7 +47,7 @@ func (rc RiakClient) client() *riak.Client {
 	return c
 }
 
-func (rc RiakClient) createObject(bucket string, key string, value []byte) (*riak.Object, error) {
+func (rc *RiakClient) createObject(bucket string, key string, value []byte) (*riak.Object, error) {
 	c := rc.client()
 	if c == nil {
 		return nil, errors.New("no client")
@@ -82,7 +82,7 @@ func (rc RiakClient) createObject(bucket string, key string, value []byte) (*ria
 	return scmd.Response.Values[0], nil
 }
 
-func (rc RiakClient) getObject(bucket string, key string) (*riak.Object, error) {
+func (rc *RiakClient) getObject(bucket string, key string) (*riak.Object, error) {
 	c := rc.client()
 	if c == nil {
 		return nil, errors.New("no client")
