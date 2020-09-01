@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"html"
 	"net/http"
 )
 
@@ -31,6 +33,7 @@ func decode(r *http.Request, v interface{}) error {
 }
 
 func respondErr(w http.ResponseWriter, r *http.Request, err error, code int) {
+	fmt.Errorf("respond error: %v", err)
 	errObj := struct {
 		Error string `json:"error"`
 	}{Error: err.Error()}
@@ -38,7 +41,7 @@ func respondErr(w http.ResponseWriter, r *http.Request, err error, code int) {
 	w.WriteHeader(code)
 	err = json.NewEncoder(w).Encode(errObj)
 	if err != nil {
-		fmt.Errorf("repondErr: %s", err)
+		fmt.Errorf("respond err: %s", err)
 	}
 }
 
@@ -66,13 +69,23 @@ func (s *server) handleNewURL() http.HandlerFunc {
 		ShortURL string `json:"short_url"`
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			respondErr(w, r, errors.New("bad request"), http.StatusBadRequest)
+			return
+		}
 		err := decode(r, &request)
 		if err != nil {
 			respondErr(w, r, err, http.StatusBadRequest)
+			return
+		}
+		if request.URL == "" {
+			respondErr(w, r, errors.New("field url is required"), http.StatusBadRequest)
+			return
 		}
 		shortURL, err := SaveURL(s.db, request.URL)
 		if err != nil {
 			respondErr(w, r, err, http.StatusBadRequest)
+			return
 		}
 		response.ShortURL = fmt.Sprintf("http://%s%s/%s", s.domain, s.port, shortURL)
 		respond(w, r, response, http.StatusCreated)
@@ -81,9 +94,14 @@ func (s *server) handleNewURL() http.HandlerFunc {
 
 func (s *server) handleRedirectURL() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		url, err := FindURL(s.db, r.URL.Path[1:])
+		if r.Method != http.MethodGet {
+			respondErr(w, r, errors.New("bad request"), http.StatusBadRequest)
+			return
+		}
+		url, err := FindURL(s.db, html.EscapeString(r.URL.Path[1:]))
 		if err != nil {
-			respondErr(w, r, err, http.StatusNotFound)
+			respondErr(w, r, errors.New("not found"), http.StatusNotFound)
+			return
 		}
 		http.Redirect(w, r, url, http.StatusFound)
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -50,5 +51,21 @@ func TestHandleRedirectURL(t *testing.T) {
 	srv.ServeHTTP(w, req)
 	if w.Code != http.StatusFound {
 		t.Errorf("expected status code %d, got %d", http.StatusFound, w.Code)
+	}
+}
+
+func TestRespondErr(t *testing.T) {
+	req := httptest.NewRequest("GET", "/RANDOM_STRING", nil)
+	w := httptest.NewRecorder()
+	errStr := "something bad happened"
+	respondErr(w, req, errors.New(errStr), http.StatusBadRequest)
+
+	var err struct {
+		Error string `json:"error"`
+	}
+	json.NewDecoder(w.Body).Decode(&err)
+
+	if err.Error != errStr {
+		t.Errorf("expected %s, got %s", errStr, err.Error)
 	}
 }
