@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 )
@@ -15,9 +16,15 @@ func main() {
 }
 
 func run(args []string, stdout io.Writer) error {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+		log.Printf("Defaulting to port %s", port)
+	}
+
 	srv := &server{
 		domain: "localhost",
-		port:   ":8080",
+		port:   port,
 		db: &RiakClient{
 			IP:             "localhost",
 			ShortURLBucket: "short_urls",
@@ -25,5 +32,7 @@ func run(args []string, stdout io.Writer) error {
 		router: http.NewServeMux(),
 	}
 	srv.routes()
-	return http.ListenAndServe(srv.port, srv)
+
+	log.Printf("Listening on port %s", srv.port)
+	return http.ListenAndServe(":"+srv.port, srv)
 }

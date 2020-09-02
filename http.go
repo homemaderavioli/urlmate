@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"html"
+	"log"
 	"net/http"
 )
 
@@ -33,7 +34,7 @@ func decode(r *http.Request, v interface{}) error {
 }
 
 func respondErr(w http.ResponseWriter, r *http.Request, err error, code int) {
-	fmt.Errorf("respond error: %v", err)
+	log.Printf("respond error: %v", err)
 	errObj := struct {
 		Error string `json:"error"`
 	}{Error: err.Error()}
@@ -41,7 +42,7 @@ func respondErr(w http.ResponseWriter, r *http.Request, err error, code int) {
 	w.WriteHeader(code)
 	err = json.NewEncoder(w).Encode(errObj)
 	if err != nil {
-		fmt.Errorf("respond err: %s", err)
+		log.Printf("respond err: %s", err)
 	}
 }
 
@@ -56,7 +57,7 @@ func respond(w http.ResponseWriter, r *http.Request, v interface{}, code int) {
 	w.WriteHeader(code)
 	_, err = buf.WriteTo(w)
 	if err != nil {
-		fmt.Errorf("respond: %s", err)
+		log.Printf("respond: %s", err)
 	}
 }
 
@@ -70,7 +71,7 @@ func (s *server) handleNewURL() http.HandlerFunc {
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			respondErr(w, r, errors.New("bad request"), http.StatusBadRequest)
+			respondErr(w, r, errors.New("bad request1"), http.StatusBadRequest)
 			return
 		}
 		err := decode(r, &request)
@@ -82,7 +83,7 @@ func (s *server) handleNewURL() http.HandlerFunc {
 			respondErr(w, r, errors.New("field url is required"), http.StatusBadRequest)
 			return
 		}
-		shortURL, err := SaveURL(s.db, request.URL)
+		shortURL, err := SaveURL(s.db, html.EscapeString(request.URL))
 		if err != nil {
 			respondErr(w, r, err, http.StatusBadRequest)
 			return
@@ -94,6 +95,7 @@ func (s *server) handleNewURL() http.HandlerFunc {
 
 func (s *server) handleRedirectURL() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%v\n", r)
 		if r.Method != http.MethodGet {
 			respondErr(w, r, errors.New("bad request"), http.StatusBadRequest)
 			return
